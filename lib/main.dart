@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 // import 'generated/i18n.dart';
 import 'kater_api.dart';
@@ -37,23 +38,40 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  Map content;
-  List discussions = [];
-  List included;
+  Map content = new Map();
+  List discussions = new List();
+  List included = new List();
+  GlobalKey<RefreshIndicatorState> _refreshIndicatorKey;
 
-  void _incrementCounter() async {
+  @override
+  void initState() {
+    super.initState();
+    _refreshIndicatorKey = new GlobalKey<RefreshIndicatorState>();
+    SchedulerBinding.instance.addPostFrameCallback((_) {
+      _refreshIndicatorKey.currentState?.show();
+    });
+
+    this._onRefresh();
+  }
+
+  Future<dynamic> _onRefresh() async {
     content = await KaterAPI().fetchNews();
-    discussions = content["data"];
-    included = content["included"];
+    setState(() {
+      discussions = content["data"];
+      included = content["included"];
+    });
   }
 
   String _getUserAvatarUrl(String userID) {
     for (var element in included) {
       if (element["id"] == userID) {
-        return element["attributes"]["avatarUrl"];
+        if (element["attributes"]["avatarUrl"] != null)
+          return element["attributes"]["avatarUrl"];
+        else
+          return "https://fakeimg.pl/35/?text=Avatar";
       }
     }
-    return "";
+    return "https://fakeimg.pl/35/?text=";
   }
 
   @override
@@ -62,29 +80,35 @@ class _MyHomePageState extends State<MyHomePage> {
       appBar: AppBar(
         title: Text(widget.title),
       ),
-      body: new ListView.builder(
-          itemCount: discussions.length,
-          itemBuilder: (context, index) {
-            return ListTile(
-              leading: new Container(
-                  width: 35.0,
-                  height: 35.0,
-                  decoration: new BoxDecoration(
-                      shape: BoxShape.circle,
-                      image: new DecorationImage(
-                          fit: BoxFit.fill,
-                          image: new NetworkImage(_getUserAvatarUrl(
-                              discussions[index]["relationships"]["user"]
-                                  ["data"]["id"]))))),
-              title: Text(discussions[index]["attributes"]["title"]),
-              subtitle: Text(discussions[index]["attributes"]["createdAt"]),
-            );
-          }),
+      body: RefreshIndicator(onRefresh: _onRefresh, child: _buildList()),
       floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
+        onPressed: _onRefresh,
         tooltip: 'Increment',
         child: Icon(Icons.add),
       ),
     );
+  }
+
+  Widget _buildList() {
+    return ListView.separated(
+        itemCount: discussions.length,
+        separatorBuilder: (BuildContext context, int index) =>
+            Divider(height: 3, color: Colors.black26),
+        itemBuilder: (context, index) {
+          return ListTile(
+            leading: new Container(
+                width: 35.0,
+                height: 35.0,
+                decoration: new BoxDecoration(
+                    shape: BoxShape.circle,
+                    image: new DecorationImage(
+                        fit: BoxFit.fill,
+                        image: new NetworkImage(_getUserAvatarUrl(
+                            discussions[index]["relationships"]["user"]["data"]
+                                ["id"]))))),
+            title: Text(discussions[index]["attributes"]["title"]),
+            subtitle: Text(discussions[index]["attributes"]["createdAt"]),
+          );
+        });
   }
 }
