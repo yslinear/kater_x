@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:kater_x/discussion_page.dart';
 // import 'generated/i18n.dart';
 import 'kater_api.dart';
 import 'package:intl/intl.dart';
@@ -137,36 +138,46 @@ class _MyHomePageState extends State<MyHomePage> {
             Divider(height: 10, color: Colors.black26),
         itemBuilder: (context, index) {
           return ListTile(
-              leading: new Container(
-                  width: 45.0,
-                  height: 45.0,
-                  decoration: new BoxDecoration(
-                      shape: BoxShape.circle,
-                      image: new DecorationImage(
-                          fit: BoxFit.fill,
-                          image: new NetworkImage(_getUserAvatarUrl(
-                              discussions[index]["relationships"]["user"]
-                                  ["data"]["id"]))))),
-              title: Text(discussions[index]["attributes"]["title"]),
-              subtitle: RichText(
-                text: TextSpan(
-                  children: [
-                    TextSpan(
-                      text: _getUserName(discussions[index]["relationships"]
-                          ["lastPostedUser"]["data"]["id"]),
-                    ),
-                    WidgetSpan(
-                      child: Icon(Icons.reply, size: 14, color: Colors.black54),
-                    ),
-                    TextSpan(
-                      text: formatter.format(DateTime.parse(
-                              discussions[index]["attributes"]["lastPostedAt"])
-                          .toLocal()),
-                    ),
-                  ],
-                  style: TextStyle(fontSize: 14, color: Colors.black54),
+            leading: new Container(
+                width: 45.0,
+                height: 45.0,
+                decoration: new BoxDecoration(
+                    shape: BoxShape.circle,
+                    image: new DecorationImage(
+                        fit: BoxFit.fill,
+                        image: new NetworkImage(_getUserAvatarUrl(
+                            discussions[index]["relationships"]["user"]["data"]
+                                ["id"]))))),
+            title: Text(discussions[index]["attributes"]["title"]),
+            subtitle: RichText(
+              text: TextSpan(
+                children: [
+                  TextSpan(
+                    text: _getUserName(discussions[index]["relationships"]
+                        ["lastPostedUser"]["data"]["id"]),
+                  ),
+                  WidgetSpan(
+                    child: Icon(Icons.reply, size: 14, color: Colors.black54),
+                  ),
+                  TextSpan(
+                    text: formatter.format(DateTime.parse(
+                            discussions[index]["attributes"]["lastPostedAt"])
+                        .toLocal()),
+                  ),
+                ],
+                style: TextStyle(fontSize: 14, color: Colors.black54),
+              ),
+            ),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) =>
+                      DiscussionPage(discussionID: discussions[index]["id"]),
                 ),
-              ));
+              );
+            },
+          );
         });
   }
 }
