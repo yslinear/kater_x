@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_html/flutter_html.dart';
+import 'package:intl/intl.dart';
 import 'kater_api.dart';
 import 'parse_api.dart';
 
@@ -13,7 +15,6 @@ class DiscussionPage extends StatefulWidget {
 class _DiscussionPage extends State<DiscussionPage> {
   var data;
   var included;
-  var postUser;
   Color mainColor;
 
   Color _parseColor(String colorHexString) {
@@ -22,6 +23,7 @@ class _DiscussionPage extends State<DiscussionPage> {
   }
 
   Future _loadAsset(BuildContext context) async {
+    print("Enter: " + widget.discussionID);
     var value = await KaterAPI().fetchDiscussion(widget.discussionID);
     data = value["data"];
     included = value["included"];
@@ -50,7 +52,7 @@ class _DiscussionPage extends State<DiscussionPage> {
             title: new Text(data["attributes"]["title"]),
             backgroundColor: Color(int.parse(ParseAPI().getTagColor(included))),
           ),
-          body: Column(children: <Widget>[
+          body: ListView(children: <Widget>[
             Container(
               decoration: BoxDecoration(
                   color: Color(int.parse(ParseAPI().getTagColor(included)))),
@@ -75,6 +77,7 @@ class _DiscussionPage extends State<DiscussionPage> {
                         ],
                       ))),
             ),
+            _buildComments()
           ]));
     }
   }
@@ -108,6 +111,110 @@ class _DiscussionPage extends State<DiscussionPage> {
       text: TextSpan(
         children: list,
       ),
+    );
+  }
+
+  Widget _buildComments() {
+    List comments = ParseAPI().getComments(included);
+    var formatter = new DateFormat('yyyy-MM-dd HH:mm:ss');
+    return ListView.separated(
+        shrinkWrap: true,
+        physics: NeverScrollableScrollPhysics(),
+        itemCount: comments.length,
+        separatorBuilder: (BuildContext context, int index) =>
+            Divider(height: 10, color: Colors.black26),
+        itemBuilder: (context, index) {
+          return ListTile(
+            title: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: <Widget>[
+                Row(children: <Widget>[
+                  Container(
+                      margin: EdgeInsets.only(right: 15.0),
+                      width: 45.0,
+                      height: 45.0,
+                      decoration: new BoxDecoration(
+                          shape: BoxShape.circle,
+                          image: new DecorationImage(
+                              fit: BoxFit.fill,
+                              image: new NetworkImage(ParseAPI()
+                                  .getUserAvatarUrl(
+                                      included,
+                                      comments[index]["relationships"]["user"]
+                                          ["data"]["id"]))))),
+                  Container(
+                    child: Flexible(
+                      child: new Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          new Text(
+                            ParseAPI().getUserName(
+                                included,
+                                comments[index]["relationships"]["user"]["data"]
+                                    ["id"]),
+                            style: TextStyle(fontSize: 15.0),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  _floorIndex(comments[index]["attributes"]["number"]),
+                ]),
+                Html(
+                  data: comments[index]["attributes"]["contentHtml"],
+                  style: {},
+                )
+              ],
+            ),
+            subtitle: Row(
+              children: <Widget>[
+                Text(
+                  formatter.format(
+                      DateTime.parse(comments[index]["attributes"]["createdAt"])
+                          .toLocal()),
+                ),
+                Spacer(),
+                Icon(Icons.thumb_up, size: 14, color: Colors.black54),
+                Container(
+                  margin: EdgeInsets.symmetric(horizontal: 10),
+                  child: _calVotes(comments[index]["relationships"]["upvotes"],
+                      comments[index]["relationships"]["downvotes"]),
+                ),
+                Icon(Icons.thumb_down, size: 14, color: Colors.black54),
+              ],
+            ),
+          );
+        });
+  }
+
+  Container _floorIndex(var number) {
+    String floorIndex = '$number';
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(5.0),
+        color: Colors.grey,
+      ),
+      margin: EdgeInsets.symmetric(vertical: 3, horizontal: 5),
+      padding: EdgeInsets.symmetric(vertical: 3, horizontal: 10),
+      child: Text(
+        floorIndex,
+        strutStyle: StrutStyle(
+          forceStrutHeight: true,
+        ),
+        style: TextStyle(fontSize: 15.0, color: Colors.white),
+      ),
+    );
+  }
+
+  Text _calVotes(upvotes, downvotes) {
+    int votes;
+    try {
+      votes = upvotes["data"].length - downvotes["data"].length;
+    } catch (e) {
+      votes = 0;
+    }
+    return Text(
+      '$votes',
     );
   }
 }

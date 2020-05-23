@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:kater_x/discussion_page.dart';
+import 'package:kater_x/parse_api.dart';
 // import 'generated/i18n.dart';
 import 'kater_api.dart';
 import 'package:intl/intl.dart';
@@ -61,8 +62,9 @@ class _MyHomePageState extends State<MyHomePage> {
     this._fetchData();
 
     _scrollController.addListener(() {
-      if (_scrollController.position.pixels ==
-          (_scrollController.position.maxScrollExtent)) {
+      if (_scrollController.position.extentAfter < 800.0) {
+        print('loading by extentafter pageOffset:$pageOffset');
+        print("extentAfter:${_scrollController.position.extentAfter}");
         pageOffset += 20;
         _fetchData();
       }
@@ -89,18 +91,6 @@ class _MyHomePageState extends State<MyHomePage> {
       discussions.addAll(content["data"]);
       included.addAll(content["included"]);
     });
-  }
-
-  String _getUserAvatarUrl(String userID) {
-    for (var element in included) {
-      if (element["id"] == userID) {
-        if (element["attributes"]["avatarUrl"] != null)
-          return element["attributes"]["avatarUrl"];
-        else
-          return "https://fakeimg.pl/45/?text=Avatar";
-      }
-    }
-    return "https://fakeimg.pl/45/?text=Avatar";
   }
 
   String _getUserName(String userID) {
@@ -145,7 +135,8 @@ class _MyHomePageState extends State<MyHomePage> {
                     shape: BoxShape.circle,
                     image: new DecorationImage(
                         fit: BoxFit.fill,
-                        image: new NetworkImage(_getUserAvatarUrl(
+                        image: new NetworkImage(ParseAPI().getUserAvatarUrl(
+                            included,
                             discussions[index]["relationships"]["user"]["data"]
                                 ["id"]))))),
             title: Text(discussions[index]["attributes"]["title"]),

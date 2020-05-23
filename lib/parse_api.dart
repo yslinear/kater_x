@@ -1,5 +1,5 @@
 class ParseAPI {
-  String getUserAvatarUrl(var included, String userID) {
+  String getUserAvatarUrl(var included, var userID) {
     for (var element in included) {
       if ("users" != element["type"]) continue;
       if (element["id"] == userID) {
@@ -12,6 +12,18 @@ class ParseAPI {
     return "https://fakeimg.pl/45/?text=Avatar";
   }
 
+  String getUserName(var included, var userID) {
+    for (var element in included) {
+      if (element["id"] == userID) {
+        if (element["attributes"]["displayName"] != null)
+          return element["attributes"]["displayName"];
+        else
+          return "";
+      }
+    }
+    return "";
+  }
+
   String getTagColor(List included) {
     for (var element in included) {
       if ("tags" != element["type"]) continue;
@@ -21,5 +33,13 @@ class ParseAPI {
         return '0xffBCBCBC';
     }
     return '0xffBCBCBC';
+  }
+
+  List getComments(List included) {
+    List posts = new List();
+    for (var element in included) {
+      if ("comment" == element["attributes"]["contentType"]) posts.add(element);
+    }
+    return posts;
   }
 }

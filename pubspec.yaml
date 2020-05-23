@@ -12,6 +12,7 @@ dependencies:
     sdk: flutter
   http: ^0.12.0+4
   cupertino_icons: ^0.1.2
+  flutter_html: ^1.0.0-pre.1
 
 dev_dependencies:
   flutter_test:
