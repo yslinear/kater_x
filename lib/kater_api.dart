@@ -20,6 +20,13 @@ class KaterAPI {
     return responseList;
   }
 
+  fetchPosts(String postsIDstring) async {
+    var response = await http
+        .get(kater_host + api_path + "posts?filter[id]=" + "$postsIDstring");
+    var responseList = json.decode(response.body);
+    return responseList;
+  }
+
   fetchUser(int userID) async {
     var response = await http.get(kater_host + api_path + "users/" + "$userID");
     return json.decode(response.body);

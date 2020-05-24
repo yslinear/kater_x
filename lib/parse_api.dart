@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart';
+
 class ParseAPI {
   String getUserAvatarUrl(var included, var userID) {
     for (var element in included) {
@@ -24,15 +26,9 @@ class ParseAPI {
     return "";
   }
 
-  String getTagColor(List included) {
-    for (var element in included) {
-      if ("tags" != element["type"]) continue;
-      if (element["attributes"]["color"] != null)
-        return element["attributes"]["color"].replaceAll('#', '0xff');
-      else
-        return '0xffBCBCBC';
-    }
-    return '0xffBCBCBC';
+  Color parseColor(String colorHexString) {
+    if ('' == colorHexString) colorHexString = '#000000';
+    return Color(int.parse(colorHexString.replaceAll('#', '0xff')));
   }
 
   List getComments(List included) {
