@@ -78,10 +78,10 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<dynamic> _onRefresh() {
-    this.pageOffset = 0;
     discussions.clear();
     included.clear();
     setState(() {});
+    this.pageOffset = 0;
     return _fetchData();
   }
 
@@ -114,7 +114,6 @@ class _MyHomePageState extends State<MyHomePage> {
       body: RefreshIndicator(onRefresh: _onRefresh, child: _buildList()),
       floatingActionButton: FloatingActionButton(
         onPressed: _onRefresh,
-        // tooltip: 'Increment',
         child: Icon(Icons.refresh),
       ),
     );
@@ -123,48 +122,62 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget _buildList() {
     return ListView.separated(
         controller: _scrollController,
-        itemCount: discussions.length,
+        itemCount: this.discussions.length,
         separatorBuilder: (BuildContext context, int index) =>
             Divider(height: 10, color: Colors.black26),
         itemBuilder: (context, index) {
           return ListTile(
-            leading: new Container(
-                width: 45.0,
-                height: 45.0,
-                decoration: new BoxDecoration(
-                    shape: BoxShape.circle,
-                    image: new DecorationImage(
-                        fit: BoxFit.fill,
-                        image: new NetworkImage(ParseAPI().getUserAvatarUrl(
-                            included,
-                            discussions[index]["relationships"]["user"]["data"]
-                                ["id"]))))),
-            title: Text(discussions[index]["attributes"]["title"]),
+            leading: CircleAvatar(
+                backgroundImage: new NetworkImage(
+              ParseAPI().getUserAvatarUrl(
+                  included,
+                  this.discussions[index]["relationships"]["user"]["data"]
+                      ["id"]),
+            )),
+            title: Text(this.discussions[index]["attributes"]["title"]),
             subtitle: RichText(
               text: TextSpan(
                 children: [
                   TextSpan(
-                    text: _getUserName(discussions[index]["relationships"]
+                    text: _getUserName(this.discussions[index]["relationships"]
                         ["lastPostedUser"]["data"]["id"]),
                   ),
                   WidgetSpan(
+                    alignment: PlaceholderAlignment.middle,
                     child: Icon(Icons.reply, size: 14, color: Colors.black54),
                   ),
                   TextSpan(
-                    text: formatter.format(DateTime.parse(
-                            discussions[index]["attributes"]["lastPostedAt"])
+                    text: formatter.format(DateTime.parse(this
+                            .discussions[index]["attributes"]["lastPostedAt"])
                         .toLocal()),
                   ),
                 ],
                 style: TextStyle(fontSize: 14, color: Colors.black54),
               ),
             ),
+            trailing: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(5.0),
+                color: Colors.blue,
+              ),
+              margin: EdgeInsets.symmetric(vertical: 3, horizontal: 5),
+              padding: EdgeInsets.symmetric(vertical: 3, horizontal: 5),
+              child: Text(
+                this
+                    .discussions[index]["attributes"]["lastPostNumber"]
+                    .toString(),
+                strutStyle: StrutStyle(
+                  forceStrutHeight: true,
+                ),
+                style: TextStyle(fontSize: 15.0, color: Colors.white),
+              ),
+            ),
             onTap: () {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) =>
-                      DiscussionPage(discussionID: discussions[index]["id"]),
+                  builder: (context) => DiscussionPage(
+                      discussionID: this.discussions[index]["id"]),
                 ),
               );
             },
